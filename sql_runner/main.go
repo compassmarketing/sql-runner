@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"github.com/kardianos/osext"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +55,25 @@ func main() {
 		log.Fatalf("Error getting playbook: %s", err.Error())
 	}
 
-	pb.MergeCLIVariables(options.variables)
+	// Set Targets from URI
+	url, urlErr := url.ParseRequestURI(options.dbURI)
+	if urlErr != nil {
+		log.Fatalf("Error parsing URI: %s", err.Error())
+	}
+	hosts := strings.Split(url.Host, ":")
+	host := hosts[0]
+	port := "5432"
+	if len(hosts) > 1 {
+		port = hosts[1]
+	}
+
+	database := strings.TrimPrefix(url.Path,"/")
+
+	password, _ := url.User.Password()
+	target := Target{Name: url.Scheme, Type: url.Scheme, Host: host, Port: port, Username: url.User.Username(), Password: password, Database: database}
+
+	*pb = pb.AddTarget(target)
+	*pb = pb.MergeCLIVariables(options.variables)
 
 	sp, spErr := SQLProviderFromOptions(options)
 
@@ -135,6 +154,11 @@ func processFlags() Options {
 
 	if options.playbook == "" {
 		fmt.Println("required flag not defined: -playbook")
+		os.Exit(2)
+	}
+
+	if options.dbURI == "" {
+		fmt.Println("required flag not defined: -dbURI")
 		os.Exit(2)
 	}
 

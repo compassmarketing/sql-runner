@@ -39,6 +39,11 @@ func NewPlaybook() Playbook {
 	return Playbook{Variables: make(map[string]interface{})}
 }
 
+func (p Playbook) AddTarget(target Target) Playbook {
+	p.Targets = append(p.Targets, target)
+	return p
+}
+
 func (p Playbook) MergeCLIVariables(variables map[string]string) Playbook {
 	// TODO: Ideally this would return a new copy of the playbook to avoid
 	// mutable state.

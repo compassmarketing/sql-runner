@@ -1,35 +1,14 @@
 # Note Ruby-flavored :s at start of YAML properties. Not required
-:targets:
-  - :name: "My Postgres database 1"
-    :type: postgres
-    :host: localhost
-    :database: sql_runner_tests_1
-    :port: 5432
-    :username: postgres
-    :password:
-    :ssl: false # SSL disabled by default
-  - :name: "My Postgres database 2"
-    :type: postgres
-    :host: localhost
-    :database: sql_runner_tests_2
-    :port: 5432
-    :username: postgres
-    :password:
-    :ssl: false # SSL disabled by default
 :variables:
   :test_schema: sql_runner_tests
   :timeFormat: "2006_01_02"
 :steps:
-  - :name: Failing
-    :queries:
-      - :name: Corrupted script
-        :file: postgres-sql/bad/1.sql
   - :name: Create schema and table
     :queries:
       - :name: Create schema and table
         :file: postgres-sql/good/1.sql
         :template: true
-  - :name: Parallel load
+  - :name: Parallel loaddocker ps
     :queries:
       - :name: Parallel load 1
         :file: postgres-sql/good/2a.sql
