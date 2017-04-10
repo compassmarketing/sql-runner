@@ -49,6 +49,7 @@ type QueryStatus struct {
 	Query    ReadyQuery
 	Path     string
 	Affected int
+	Count    int
 	Error    error
 }
 
@@ -63,6 +64,7 @@ type ReadyQuery struct {
 	Script string
 	Name   string
 	Path   string
+	Count  bool
 }
 
 // Runs a playbook of SQL scripts.
@@ -210,7 +212,7 @@ func loadSteps(steps []Step, sp SQLProvider, variables map[string]interface{}, t
 				}
 				return nil, allStatuses
 			} else {
-				readyQueries[j] = ReadyQuery{Script: queryText, Name: query.Name, Path: queryPath}
+				readyQueries[j] = ReadyQuery{Script: queryText, Name: query.Name, Path: queryPath, Count: query.Count}
 			}
 		}
 		readySteps[i] = ReadyStep{Name: step.Name, Queries: readyQueries}
@@ -307,7 +309,11 @@ func runQueries(database Db, stepIndex int, stepName string, queries []ReadyQuer
 			if status.Error != nil {
 				log.Printf("FAILURE: %s (step %s @ target %s), ERROR: %s\n", status.Query.Name, stepName, dbName, status.Error.Error())
 			} else {
-				log.Printf("SUCCESS: %s (step %s @ target %s), ROWS AFFECTED: %d\n", status.Query.Name, stepName, dbName, status.Affected)
+				if status.Query.Count {
+					log.Printf("SUCCESS: %s (step %s @ target %s), ROWS AFFECTED: %d, COUNT RETURNED: %d\n ", status.Query.Name, stepName, dbName, status.Affected, status.Count)
+				} else {
+					log.Printf("SUCCESS: %s (step %s @ target %s), ROWS AFFECTED: %d\n", status.Query.Name, stepName, dbName, status.Affected)
+				}
 			}
 			allStatuses = append(allStatuses, status)
 		}

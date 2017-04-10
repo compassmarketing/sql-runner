@@ -15,11 +15,15 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/jordan-wright/email"
+	"net/smtp"
+	"os"
 	"text/template"
 )
 
 var (
 	failureTemplate *template.Template
+	emailTemplate   *template.Template
 )
 
 func init() {
@@ -31,16 +35,52 @@ QUERY FAILURES:{{range $status := .}}{{range $step := $status.Steps}}{{range $qu
 * Query {{$query.Query.Name}} {{$query.Path}} (in step {{$step.Name}} @ target {{$status.Name}}), ERROR:
   - {{$query.Error}}{{end}}{{end}}{{end}}{{end}}
 `))
+
+	emailTemplate = template.Must(template.New("email").Parse(`
+{{range $status := .}}{{range $step := $status.Steps}}{{if $step.Name}}Step: {{$step.Name}}{{end}}
+{{range $query := $step.Queries}}
+{{if $query.Query.Count}}* Query {{$query.Query.Name}}: {{$query.Count}}{{else}}* Query {{$query.Query.Name}}: {{$query.Affected}}{{end}}
+{{end}}{{end}}{{end}}
+`))
 }
 
-func review(statuses []TargetStatus) (int, string) {
+func review(pb Playbook, statuses []TargetStatus) (int, string) {
 	exitCode, queryCount := getExitCodeAndQueryCount(statuses)
 
 	if exitCode == 0 {
+
+		// Send success email
+		err := sendEmail(pb.Notification, getEmailMessage(statuses))
+		if err != nil {
+			fmt.Println(err)
+		}
+
 		return exitCode, getSuccessMessage(queryCount, len(statuses))
 	} else {
 		return exitCode, getFailureMessage(statuses)
 	}
+}
+
+func sendEmail(info EmailInfo, body string) error {
+	e := email.NewEmail()
+	e.From = "system@cmsdm.com"
+	e.To = []string{info.To}
+	e.Subject = info.Subject
+	e.Text = []byte(body)
+
+	password := os.Getenv("SYSTEM_EMAIL_PASS")
+
+	err := e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "system@cmsdm.com", password, "smtp.gmail.com"))
+	return err
+}
+
+func getEmailMessage(statuses []TargetStatus) string {
+	var message bytes.Buffer
+	if err := emailTemplate.Execute(&message, statuses); err != nil {
+		return fmt.Sprintf("ERROR: executing failure message template itself failed: %s", err.Error())
+	}
+
+	return message.String()
 }
 
 // Don't use a template here as executing it could fail

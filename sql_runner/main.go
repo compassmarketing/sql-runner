@@ -67,7 +67,7 @@ func main() {
 		port = hosts[1]
 	}
 
-	database := strings.TrimPrefix(url.Path,"/")
+	database := strings.TrimPrefix(url.Path, "/")
 
 	password, _ := url.User.Password()
 	target := Target{Name: url.Scheme, Type: url.Scheme, Host: host, Port: port, Username: url.User.Username(), Password: password, Database: database}
@@ -90,7 +90,7 @@ func main() {
 	}
 
 	statuses := Run(*pb, sp, options.fromStep, options.runQuery, options.dryRun)
-	code, message := review(statuses)
+	code, message := review(*pb, statuses)
 
 	// Unlock on success and soft-lock
 	if lockFile != nil {

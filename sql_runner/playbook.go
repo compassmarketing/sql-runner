@@ -14,9 +14,14 @@ package main
 
 // Maps exactly onto our YAML format
 type Playbook struct {
-	Targets   []Target
-	Variables map[string]interface{}
-	Steps     []Step
+	Targets      []Target
+	Variables    map[string]interface{}
+	Steps        []Step
+	Notification EmailInfo
+}
+
+type EmailInfo struct {
+	To, Subject string
 }
 
 type Target struct {
@@ -32,6 +37,7 @@ type Step struct {
 type Query struct {
 	Name, File string
 	Template   bool
+	Count      bool
 }
 
 // Initialize properly the Playbook
