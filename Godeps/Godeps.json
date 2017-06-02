@@ -1,9 +1,10 @@
 {
-	"ImportPath": "github.com/snowplow/sql-runner",
+
+	"ImportPath": "code.compass.com/sql-runner",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Packages": [
-		"./sql_runner/"
+		"./..."
 	],
 	"Deps": [
 		{

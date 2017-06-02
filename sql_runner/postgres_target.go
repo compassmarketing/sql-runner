@@ -15,6 +15,7 @@ package main
 import (
 	"crypto/tls"
 	"gopkg.in/pg.v5"
+	"gopkg.in/pg.v5/types"
 	"net"
 	"time"
 )
@@ -66,14 +67,25 @@ func (pt PostgresTarget) GetTarget() Target {
 func (pt PostgresTarget) RunQuery(query ReadyQuery, dryRun bool) QueryStatus {
 
 	if dryRun {
-		return QueryStatus{query, query.Path, 0, nil}
+		return QueryStatus{query, query.Path, 0, 0, nil}
 	}
 
-	res, err := pt.Client.Exec(query.Script)
 	affected := 0
+	count := 0
+
+	var err error
+	var res *types.Result
+
+	// If the query is a count, get the result
+	if query.Count {
+		res, err = pt.Client.QueryOne(&count, query.Script)
+	} else {
+		res, err = pt.Client.Exec(query.Script)
+	}
+
 	if err == nil {
 		affected = res.RowsAffected()
 	}
 
-	return QueryStatus{query, query.Path, affected, err}
+	return QueryStatus{query, query.Path, affected, count, err}
 }
