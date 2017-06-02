@@ -23,7 +23,7 @@ import (
 // For Redshift queries
 const (
 	dialTimeout = 10 * time.Second
-	readTimeout = 8 * time.Hour // TODO: make this user configurable
+	readTimeout = 24 * time.Hour // TODO: make this user configurable
 )
 
 type PostgresTarget struct {
